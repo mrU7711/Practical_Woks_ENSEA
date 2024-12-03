@@ -1,0 +1,9 @@
+# Ignore the executable
+enseash
+
+# Ignore object files
+*.o
+
+# Ignore temporary files from editors or builds
+*.swp
+.vscode/
