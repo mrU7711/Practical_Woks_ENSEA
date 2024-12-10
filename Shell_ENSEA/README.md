@@ -114,4 +114,4 @@ This version of the shell stops at **Task 8 (Pipe Redirection)**. The final task
 
 ## Authors
 
-This shell was developed collaborratively by Khalid Zouhair and Fabien Marcellin as part of a second-year computer science TP project.
+This shell was developed collaborratively by Khalid Zouhair and Fabien Marcellin as part of our "TP de synthèse".
