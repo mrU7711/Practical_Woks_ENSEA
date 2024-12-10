@@ -76,14 +76,13 @@ This was done by:
 1. Splitting the command into segments based on the `|` symbol.
 2. Creating a child process for each command in the pipeline.
 3. Connecting the processes using pipes (`pipe()` and `dup2`).
-
 ---
 
 ## File Overview
 
-- **`main.c`****\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*:** Contains the main loop of the shell. It handles user input, calls the execution logic, and updates the prompt based on the last command's status.
-- **`shell.h`****\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*:** A header file that defines constants, macros, and function prototypes. It ensures modularity and consistency across the project.
-- **`shell.c`****\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*:** Implements all the core functionalities, including command execution, handling redirections, managing pipes, and measuring execution time.
+- **`main.c`**: Contains the main loop of the shell. It handles user input, calls the execution logic, and updates the prompt based on the last command's status.
+- **`shell.h`**: A header file that defines constants, macros, and function prototypes. It ensures modularity and consistency across the project.
+- **`shell.c`**: Implements all the core functionalities, including command execution, handling redirections, managing pipes, and measuring execution time.
 
 ---
 
