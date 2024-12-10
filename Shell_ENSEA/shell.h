@@ -7,13 +7,13 @@
 #define BUFFER_SIZE 1024
 #define STATUS_SIZE 50
 
-// Messages
+// Message macros
 #define WELCOME_MESSAGE "Welcome to ENSEA Shell!\n"
 #define EXIT_COMMAND_MESSAGE "If you want to exit the program type 'exit'\n"
 #define BYE_MESSAGE "\nBye Bye\n"
 #define PROMPT_FORMAT "ENSEASH %s %% "
 
-// Error messages
+// Error message macros
 #define ERROR_WRITE "Error while writing message"
 #define ERROR_READ "Error while reading user input"
 #define ERROR_FORK "Error during fork"
@@ -23,6 +23,9 @@
 #define ERROR_CLOCK_END "Error during clock_gettime (end)"
 #define ERROR_REDIRECT_INPUT "Error while opening input file"
 #define ERROR_REDIRECT_OUTPUT "Error while opening output file"
+#define PIPE_ERROR "Error creating pipe"
+#define INPUT_REDIRECT_ERROR "Error redirecting input"
+#define OUTPUT_REDIRECT_ERROR "Error redirecting output"
 
 // Macros for perror handling
 #define HANDLE_ERROR(msg) do { perror(msg); exit(EXIT_FAILURE); } while (0)

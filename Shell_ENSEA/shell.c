@@ -9,10 +9,11 @@
 #include <linux/time.h>
 
 // Macros for command execution
-#define MAX_ARGS 100
-#define EXIT_CMD "exit"
-#define REDIRECT_INPUT "<"
-#define REDIRECT_OUTPUT ">"
+#define MAX_ARGS 100                // Maximum number of arguments for a command
+#define MAX_PIPE_SEGMENTS 10        // Maximum number of segments in a pipeline
+#define EXIT_CMD "exit"             // Command to exit the shell
+#define REDIRECT_INPUT "<"          // Input redirection symbol
+#define REDIRECT_OUTPUT ">"         // Output redirection symbol
 
 // Displays a message to the standard output
 void display(const char *message) {
@@ -52,54 +53,110 @@ void get_command_status(int status, long elapsed_time_ms, char *status_string, s
 
 // Executes a command, measures its execution time, and returns its status
 int execute_command(char *command, long *elapsed_time_ms) {
-    command[strcspn(command, "\n")] = '\0';
+    command[strcspn(command, "\n")] = '\0'; // Remove newline character from input
 
     struct timespec start, end;
     if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) {
         HANDLE_ERROR(ERROR_CLOCK_START);
     }
 
-    char *args[MAX_ARGS];
-    char *input_file = NULL, *output_file = NULL;
-    char *token = strtok(command, " ");
-    int i = 0;
-
-    while (token != NULL) {
-        if (strcmp(token, REDIRECT_INPUT) == 0) {
-            input_file = strtok(NULL, " ");
-        } else if (strcmp(token, REDIRECT_OUTPUT) == 0) {
-            output_file = strtok(NULL, " ");
-        } else {
-            args[i++] = token;
-        }
-        token = strtok(NULL, " ");
+    // Split the command into segments by "|"
+    char *pipe_segments[MAX_PIPE_SEGMENTS];
+    int num_segments = 0;
+    char *segment = strtok(command, "|");
+    while (segment != NULL && num_segments < MAX_PIPE_SEGMENTS) {
+        pipe_segments[num_segments++] = segment;
+        segment = strtok(NULL, "|");
     }
-    args[i] = NULL;
 
-    pid_t pid = fork();
-    if (pid == -1) {
-        HANDLE_ERROR(ERROR_FORK);
-    } else if (pid == 0) {
-        if (input_file != NULL && freopen(input_file, "r", stdin) == NULL) {
-            HANDLE_ERROR(ERROR_REDIRECT_INPUT);
+    int pipe_fds[2];
+    int prev_fd = -1;
+
+    for (int i = 0; i < num_segments; i++) {
+        if (i < num_segments - 1) {
+            if (pipe(pipe_fds) == -1) {
+                HANDLE_ERROR(PIPE_ERROR);
+            }
         }
-        if (output_file != NULL && freopen(output_file, "w", stdout) == NULL) {
-            HANDLE_ERROR(ERROR_REDIRECT_OUTPUT);
+
+        pid_t pid = fork();
+        if (pid == -1) {
+            HANDLE_ERROR(ERROR_FORK);
+        } else if (pid == 0) {
+            if (prev_fd != -1) { // Connect to the previous pipe's read end
+                if (dup2(prev_fd, STDIN_FILENO) == -1) {
+                    HANDLE_ERROR(INPUT_REDIRECT_ERROR);
+                }
+                close(prev_fd);
+            }
+            if (i < num_segments - 1) { // Connect to the current pipe's write end
+                if (dup2(pipe_fds[1], STDOUT_FILENO) == -1) {
+                    HANDLE_ERROR(OUTPUT_REDIRECT_ERROR);
+                }
+                close(pipe_fds[1]);
+                close(pipe_fds[0]);
+            }
+
+            // Parse arguments for the current command segment
+            char *args[MAX_ARGS];
+            char *input_file = NULL;
+            char *output_file = NULL;
+            int j = 0;
+
+            char *token = strtok(pipe_segments[i], " ");
+            while (token != NULL && j < MAX_ARGS) {
+                if (strcmp(token, REDIRECT_INPUT) == 0) {
+                    input_file = strtok(NULL, " ");
+                } else if (strcmp(token, REDIRECT_OUTPUT) == 0) {
+                    output_file = strtok(NULL, " ");
+                } else {
+                    args[j++] = token;
+                }
+                token = strtok(NULL, " ");
+            }
+            args[j] = NULL;
+
+            // Handle input redirection
+            if (input_file != NULL) {
+                FILE *infile = freopen(input_file, "r", stdin);
+                if (infile == NULL) {
+                    HANDLE_ERROR(ERROR_REDIRECT_INPUT);
+                }
+            }
+
+            // Handle output redirection
+            if (output_file != NULL) {
+                FILE *outfile = freopen(output_file, "w", stdout);
+                if (outfile == NULL) {
+                    HANDLE_ERROR(ERROR_REDIRECT_OUTPUT);
+                }
+            }
+
+            execvp(args[0], args);
+            HANDLE_ERROR(ERROR_EXECVP);
+        } else {
+            if (prev_fd != -1) {
+                close(prev_fd);
+            }
+            if (i < num_segments - 1) {
+                close(pipe_fds[1]);
+                prev_fd = pipe_fds[0];
+            }
         }
-        execvp(args[0], args);
-        HANDLE_ERROR(ERROR_EXECVP);
-    } else {
-        int status;
-        if (waitpid(pid, &status, 0) == -1) {
+    }
+
+    int status;
+    for (int i = 0; i < num_segments; i++) {
+        if (wait(&status) == -1) {
             HANDLE_ERROR(ERROR_WAITPID);
         }
-
-        if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) {
-            HANDLE_ERROR(ERROR_CLOCK_END);
-        }
-
-        *elapsed_time_ms = (end.tv_sec - start.tv_sec) * 1000 +
-                           (end.tv_nsec - start.tv_nsec) / 1000000;
-        return status;
     }
+
+    if (clock_gettime(CLOCK_MONOTONIC, &end) == -1) {
+        HANDLE_ERROR(ERROR_CLOCK_END);
+    }
+
+    *elapsed_time_ms = (end.tv_sec - start.tv_sec) * 1000 +
+                       (end.tv_nsec - start.tv_nsec) / 1000000;
+    return status;
 }
