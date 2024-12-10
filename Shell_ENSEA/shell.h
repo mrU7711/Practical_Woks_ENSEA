@@ -1,30 +1,37 @@
 #ifndef SHELL_H
 #define SHELL_H
 
-#define MAX_INPUT_SIZE 256
+#include <stddef.h>
 
-// Messages and strings used in the shell
-#define WELCOME_MESSAGE "Welcome to ShellENSEA! \nType 'exit' to quit\n"
-#define EXIT_SUCCESS_MSG "End of ShellENSEA\nBye bye...\n"
-#define PROMPT_TEMPLATE_EXIT "enseash [exit:%d] %% "
-#define PROMPT_TEMPLATE_SIGNAL "enseash [sign:%d] %% "
+// Macros for buffer and status sizes
+#define BUFFER_SIZE 1024
+#define STATUS_SIZE 50
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/wait.h>
+// Messages
+#define WELCOME_MESSAGE "Welcome to ENSEA Shell!\n"
+#define EXIT_COMMAND_MESSAGE "If you want to exit the program type 'exit'\n"
+#define BYE_MESSAGE "\nBye Bye\n"
+#define PROMPT_FORMAT "ENSEASH %s %% "
+
+// Error messages
+#define ERROR_WRITE "Error while writing message"
+#define ERROR_READ "Error while reading user input"
+#define ERROR_FORK "Error during fork"
+#define ERROR_EXECVP "Error during execvp"
+#define ERROR_WAITPID "Error during waitpid"
+#define ERROR_CLOCK_START "Error during clock_gettime (start)"
+#define ERROR_CLOCK_END "Error during clock_gettime (end)"
+#define ERROR_REDIRECT_INPUT "Error while opening input file"
+#define ERROR_REDIRECT_OUTPUT "Error while opening output file"
+
+// Macros for perror handling
+#define HANDLE_ERROR(msg) do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
 // Function prototypes
-void shellDisplay(void);
-void command(char input[], int bytesRead);
-void return_code(void);
-
-// Extern variables
-extern int terminal;
-extern int fd_input;
-extern int status;
-extern char waitingPrompt[MAX_INPUT_SIZE];
+void display(const char *message);
+int read_user_input(char *buffer, size_t size);
+int is_exit_command(const char *buffer);
+void get_command_status(int status, long elapsed_time_ms, char *status_string, size_t size);
+int execute_command(char *command, long *elapsed_time_ms);
 
 #endif // SHELL_H

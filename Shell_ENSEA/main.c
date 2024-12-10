@@ -1,24 +1,27 @@
 #include "shell.h"
+#include <stdio.h>
 
-/**
- * Main entry point of the shell program.
- * Initializes the shell and runs the main loop to handle user commands.
- */
-int main(int argc, char **argv) {
-    shellDisplay();  // Display the welcome message
+int main(void) {
+    char buffer[BUFFER_SIZE];
+    char status_string[STATUS_SIZE] = "";
 
-    char input[MAX_INPUT_SIZE];
-    int bytesRead;
+    display(WELCOME_MESSAGE);
+    display(EXIT_COMMAND_MESSAGE);
 
     while (1) {
-        return_code();  // Update the shell prompt
-        write(terminal, waitingPrompt, strlen(waitingPrompt));  // Display the prompt
+        char prompt[BUFFER_SIZE];
+        snprintf(prompt, BUFFER_SIZE, PROMPT_FORMAT, status_string);
+        display(prompt);
 
-        bytesRead = read(fd_input, input, sizeof(input));  // Read user input
-        input[bytesRead - 1] = '\0';  // Remove the newline character from input
+        if (!read_user_input(buffer, BUFFER_SIZE) || is_exit_command(buffer)) {
+            break;
+        }
 
-        command(input, bytesRead);  // Execute the entered command
+        long elapsed_time_ms = 0;
+        int raw_status = execute_command(buffer, &elapsed_time_ms);
+        get_command_status(raw_status, elapsed_time_ms, status_string, STATUS_SIZE);
     }
 
-    return EXIT_SUCCESS;
+    display(BYE_MESSAGE);
+    return 0;
 }
