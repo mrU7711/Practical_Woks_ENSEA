@@ -1,8 +1,0 @@
-enseash
-main.c
-main.o
-Makefile
-shell.c
-shell.h
-shell.o
-toto.txt
