@@ -33,10 +33,7 @@ Initially, the client sent all packets to port 1069, even after receiving a resp
 - We updated the code to dynamically adjust the destination port after receiving the first response from the server.
 - Using Wireshark, we validated that the client correctly switched to the server's response port. This can be seen in the screenshots below:
 
-  - **First WRQ Packet**: The client sends the WRQ to port 1069. This is visible in the first packet in Wireshark:
-    ![WRQ Packet](img/image1.png)
-
-  - **Dynamic Port Update**: After the server's response, the client adjusts to the port specified in the server's ACK. Subsequent packets use this new port, as seen in the following packets:
+  - **First WRQ Packet**: The client sends the WRQ to port 1069. This is visible in the first packet in Wireshark and then after the server's response, the client adjusts to the port specified in the server's ACK. 
     ![Dynamic Port Handling](img/image2.png)
 
 ### **Question 5: Debugging with Wireshark**
